@@ -3,10 +3,12 @@
 #include "Extras\Camera.h"
 #include "Extras\Renderer.h"
 #include "Extras\HUD.h"
+#include "KeyState.h"
 
 namespace VisualDebugger
 {
 	using namespace physx;
+	using HL_PhysicsEngine::KeyState;
 
 	enum RenderMode
 	{
@@ -39,16 +41,20 @@ namespace VisualDebugger
 	///simulation objects
 	Camera* camera;
 	HL_PhysicsEngine::MyScene* scene;
-	PxReal delta_time = 1.f/60.f;
+	PxReal delta_time = 1.f / 60.f;
 	PxReal gForceStrength = 20;
 	RenderMode render_mode = NORMAL;
+
 	const int MAX_KEYS = 256;
 	bool key_state[MAX_KEYS];
+	HL_PhysicsEngine::KeyState key_status[MAX_KEYS];
+	std::vector<unsigned char> JustReleased;
+
 	bool hud_show = true;
 	HUD hud;
 
 	//Init the debugger
-	void Init(const char *window_name, int width, int height)
+	void Init(const char* window_name, int width, int height)
 	{
 		///Init PhysX
 		HL_PhysicsEngine::PxInit();
@@ -56,12 +62,12 @@ namespace VisualDebugger
 		scene->Init();
 
 		///Init renderer
-		Renderer::BackgroundColor(PxVec3(150.f/255.f,150.f/255.f,150.f/255.f));
+		Renderer::BackgroundColor(PxVec3(150.f / 255.f, 150.f / 255.f, 150.f / 255.f));
 		Renderer::SetRenderDetail(40);
 		Renderer::InitWindow(window_name, width, height);
 		Renderer::Init();
 
-		camera = new Camera(PxVec3(0.0f, 5.0f, 15.0f), PxVec3(0.f,-.1f,-1.f), 5.f);
+		camera = new Camera(PxVec3(0.0f, 5.0f, 15.0f), PxVec3(0.f, -.1f, -1.f), 5.f);
 
 		//initialise HUD
 		HUDInit();
@@ -83,7 +89,7 @@ namespace VisualDebugger
 		atexit(exitCallback);
 
 		//init motion callback
-		motionCallback(0,0);
+		motionCallback(0, 0);
 	}
 
 	void HUDInit()
@@ -117,13 +123,13 @@ namespace VisualDebugger
 		//set font size for all screens
 		hud.FontSize(0.018f);
 		//set font color for all screens
-		hud.Color(PxVec3(0.f,0.f,0.f));
+		hud.Color(PxVec3(0.f, 0.f, 0.f));
 	}
 
 	//Start the main loop
 	void Start()
-	{ 
-		glutMainLoop(); 
+	{
+		glutMainLoop();
 	}
 
 	//Render the scene and perform a single simulation step
@@ -164,8 +170,11 @@ namespace VisualDebugger
 		//finish rendering
 		Renderer::Finish();
 
+		scene->camPos = camera->getEye();
+		scene->camDir = camera->getDir();
+
 		//perform a single simulation step
-		scene->Update(delta_time);
+		scene->Update(delta_time, key_status);
 	}
 
 	//user defined keyboard handlers
@@ -173,7 +182,7 @@ namespace VisualDebugger
 	{
 		switch (toupper(key))
 		{
-		//implement your own
+			//implement your own
 		case 'R':
 			scene->ExampleKeyPressHandler();
 			break;
@@ -186,7 +195,7 @@ namespace VisualDebugger
 	{
 		switch (toupper(key))
 		{
-		//implement your own
+			//implement your own
 		case 'R':
 			scene->ExampleKeyReleaseHandler();
 			break;
@@ -237,22 +246,22 @@ namespace VisualDebugger
 		{
 			// Force controls on the selected actor
 		case 'I': //forward
-			scene->GetSelectedActor()->addForce(PxVec3(0,0,-1)*gForceStrength);
+			scene->GetSelectedActor()->addForce(PxVec3(0, 0, -1) * gForceStrength);
 			break;
 		case 'K': //backward
-			scene->GetSelectedActor()->addForce(PxVec3(0,0,1)*gForceStrength);
+			scene->GetSelectedActor()->addForce(PxVec3(0, 0, 1) * gForceStrength);
 			break;
 		case 'J': //left
-			scene->GetSelectedActor()->addForce(PxVec3(-1,0,0)*gForceStrength);
+			scene->GetSelectedActor()->addForce(PxVec3(-1, 0, 0) * gForceStrength);
 			break;
 		case 'L': //right
-			scene->GetSelectedActor()->addForce(PxVec3(1,0,0)*gForceStrength);
+			scene->GetSelectedActor()->addForce(PxVec3(1, 0, 0) * gForceStrength);
 			break;
 		case 'U': //up
-			scene->GetSelectedActor()->addForce(PxVec3(0,1,0)*gForceStrength);
+			scene->GetSelectedActor()->addForce(PxVec3(0, 1, 0) * gForceStrength);
 			break;
 		case 'M': //down
-			scene->GetSelectedActor()->addForce(PxVec3(0,-1,0)*gForceStrength);
+			scene->GetSelectedActor()->addForce(PxVec3(0, -1, 0) * gForceStrength);
 			break;
 		default:
 			break;
@@ -305,10 +314,22 @@ namespace VisualDebugger
 	void KeyPress(unsigned char key, int x, int y)
 	{
 		//do it only once
-		if (key_state[key] == true)
-			return;
+		//if (key_state[key] == true)
+			//return;
+
+		if (key_status[key] == KeyState::DOWN || key_status[key] == KeyState::HELD)
+		{
+			key_status[key] = KeyState::HELD;
+			printf("keyheld\n");
+		}
+		else {
+			key_status[key] = KeyState::DOWN;
+			printf("Key Down \n");
+		}
 
 		key_state[key] = true;
+
+
 
 		//exit
 		if (key == 27)
@@ -321,12 +342,27 @@ namespace VisualDebugger
 	void KeyRelease(unsigned char key, int x, int y)
 	{
 		key_state[key] = false;
+		key_status[key] = KeyState::RELEASED;
+		JustReleased.push_back(key);
 		UserKeyRelease(key);
+		printf("Key Released\n");
+	}
+	void KeyIdle()
+	{
+
+		for (unsigned char key : JustReleased)
+		{
+			key_status[key] = KeyState::IDLE;
+			printf("Key Idle\n");
+		}
+		JustReleased.clear();
 	}
 
 	//handle holded keys
 	void KeyHold()
 	{
+		KeyIdle();
+
 		for (int i = 0; i < MAX_KEYS; i++)
 		{
 			if (key_state[i]) // if key down

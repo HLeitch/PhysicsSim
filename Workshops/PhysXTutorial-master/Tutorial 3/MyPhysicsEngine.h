@@ -1,12 +1,15 @@
 #pragma once
 
 #include "BasicActors.h"
+#include "HL_Projectile.h"
 #include <iostream>
 #include <iomanip>
+#include "KeyState.h"
 
 namespace HL_PhysicsEngine
 {
 	using namespace std;
+	using HL_PhysicsEngine::KeyState;
 
 	//a list of colours: Circus Palette
 	static const PxVec3 color_palette[] = {PxVec3(46.f/255.f,9.f/255.f,39.f/255.f),PxVec3(217.f/255.f,0.f/255.f,0.f/255.f),
@@ -193,6 +196,9 @@ namespace HL_PhysicsEngine
 		//PxDefaultSimulationFilterShader by default
 		MyScene() : Scene() {};
 
+		PxVec3 camPos;
+		PxVec3 camDir;
+
 		///A custom scene class
 		void SetVisualisation()
 		{
@@ -238,7 +244,18 @@ namespace HL_PhysicsEngine
 		virtual void CustomUpdate() 
 		{
 		}
+		virtual void CustomInput(HL_PhysicsEngine::KeyState key_state[])
+		{
+			//printf("Custom Input Called\n");
+			if (key_state['p'] == KeyState::DOWN )
+			{
+				//printf("Projectile Launched");
+				HL_Projectile* proj = new HL_Projectile(PxVec3(0,0,0), camDir);
+				Add(proj);
 
+				
+			}
+		}
 		/// An example use of key release handling
 		void ExampleKeyReleaseHandler()
 		{

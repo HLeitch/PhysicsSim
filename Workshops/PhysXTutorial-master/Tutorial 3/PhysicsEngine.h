@@ -5,6 +5,7 @@
 #include "Exception.h"
 #include "Extras\UserData.h"
 #include <string>
+#include "KeyState.h"
 
 namespace HL_PhysicsEngine
 {
@@ -122,9 +123,13 @@ namespace HL_PhysicsEngine
 
 		///Perform a single simulation step
 		void Update(PxReal dt);
+		void Update(PxReal dt, KeyState key_state[]);
 
 		///User defined update step
 		virtual void CustomUpdate() {}
+
+		//User defined input
+		virtual void CustomInput(KeyState keystate[]) {}
 
 		///Add actors
 		void Add(Actor* actor);
@@ -149,6 +154,7 @@ namespace HL_PhysicsEngine
 
 		///a list with all actors
 		std::vector<PxActor*> GetAllActors();
+
 	};
 
 	///Generic Joint class

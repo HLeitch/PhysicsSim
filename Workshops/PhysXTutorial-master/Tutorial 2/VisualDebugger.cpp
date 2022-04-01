@@ -141,6 +141,9 @@ namespace VisualDebugger
 		//handle pressed keys
 		KeyHold();
 
+		scene->cameraDir = camera->getDir();
+		scene->cameraPos = camera->getEye();
+		scene->CustomInput(key_state);
 		//start rendering
 		Renderer::Start(camera->getEye(), camera->getDir());
 

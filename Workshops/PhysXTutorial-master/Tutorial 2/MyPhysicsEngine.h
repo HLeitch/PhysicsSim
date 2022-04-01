@@ -53,6 +53,10 @@ namespace HL_PhysicsEngine
 		Box* box;
 
 	public:
+
+		PxVec3 cameraPos = PxVec3();
+		PxVec3 cameraDir = PxVec3();
+
 		///A custom scene class
 		void SetVisualisation()
 		{
@@ -146,9 +150,12 @@ namespace HL_PhysicsEngine
 
 		virtual void CustomInput(bool key_state[])
 		{
+			printf("Custom Input Called");
 			if (key_state['P'] == true)
 			{
-				HL_Projectile* proj = new HL_Projectile()
+				printf("Projectile Launched");
+				HL_Projectile* proj = new HL_Projectile(cameraPos, cameraDir);
+
 			}
 		}
 

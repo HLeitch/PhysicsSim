@@ -115,7 +115,7 @@ namespace HL_PhysicsEngine
 		///Perform a single simulation step
 		void Update(PxReal dt);
 
-		void Update(PxReal dt, bool key_state[]);
+		void Update(PxReal dt,  key_state[]);
 
 		///User defined update step
 		virtual void CustomUpdate() {}

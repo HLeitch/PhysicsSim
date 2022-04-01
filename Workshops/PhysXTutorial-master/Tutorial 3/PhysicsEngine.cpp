@@ -293,11 +293,22 @@ namespace HL_PhysicsEngine
 			return;
 
 		CustomUpdate();
-
+		
 		px_scene->simulate(dt);
 		px_scene->fetchResults(true);
 	}
 
+	void Scene::Update(PxReal dt, KeyState key_state[])
+	{
+		if (pause)
+			return;
+
+		CustomUpdate();
+		CustomInput(key_state);
+
+		px_scene->simulate(dt);
+		px_scene->fetchResults(true);
+	}
 	void Scene::Add(Actor* actor)
 	{
 		px_scene->addActor(*actor->Get());
