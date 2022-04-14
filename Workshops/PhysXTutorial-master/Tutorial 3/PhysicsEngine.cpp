@@ -15,7 +15,7 @@ namespace HL_PhysicsEngine
 #if PX_PHYSICS_VERSION < 0x304000 // SDK 3.3
 	debugger::comm::PvdConnection* pvd = 0;
 #else
-	PxPvd*  pvd = 0;
+	PxPvd* pvd = 0;
 #endif
 	PxPhysics* physics = 0;
 	PxCooking* cooking = 0;
@@ -285,6 +285,8 @@ namespace HL_PhysicsEngine
 		selected_actor = 0;
 
 		SelectNextActor();
+
+		hl_events = hl_events->GetEvents();
 	}
 
 	void Scene::Update(PxReal dt)
@@ -293,7 +295,7 @@ namespace HL_PhysicsEngine
 			return;
 
 		CustomUpdate();
-		
+
 		px_scene->simulate(dt);
 		px_scene->fetchResults(true);
 	}
@@ -313,6 +315,11 @@ namespace HL_PhysicsEngine
 	{
 		px_scene->addActor(*actor->Get());
 	}
+	void Scene::Remove(Actor* actor)
+	{
+		px_scene->removeActor(*actor->Get());
+	}
+
 
 	PxScene* Scene::Get()
 	{

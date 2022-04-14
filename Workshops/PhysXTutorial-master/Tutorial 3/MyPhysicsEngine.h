@@ -2,6 +2,7 @@
 
 #include "BasicActors.h"
 #include "HL_Projectile.h"
+#include "HL_Events.h"
 #include <iostream>
 #include <iomanip>
 #include "KeyState.h"
@@ -61,7 +62,7 @@ namespace HL_PhysicsEngine
 		{
 			PxReal thickness = .1f;
 			bottom = new Box(PxTransform(PxVec3(0.f,thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
-			top = new Box(PxTransform(PxVec3(0.f,dimensions.y+thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
+			top = new Box(PxTransform(PxVec3(0.f,(dimensions.y+thickness),0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
 			springs.resize(4);
 			springs[0] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x,thickness,dimensions.z)), top, PxTransform(PxVec3(dimensions.x,-dimensions.y,dimensions.z)));
 			springs[1] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x,thickness,-dimensions.z)), top, PxTransform(PxVec3(dimensions.x,-dimensions.y,-dimensions.z)));
@@ -77,8 +78,9 @@ namespace HL_PhysicsEngine
 
 		void AddToScene(Scene* scene)
 		{
-			scene->Add(bottom);
+	
 			scene->Add(top);
+			scene->Add(bottom);
 		}
 
 		~Trampoline()
@@ -95,6 +97,10 @@ namespace HL_PhysicsEngine
 		//an example variable that will be checked in the main simulation loop
 		bool trigger;
 
+		Scene* _Gscene = nullptr;
+
+		int touchCount = 0;
+
 		MySimulationEventCallback() : trigger(false) {}
 
 		///Method called when the contact with the trigger object is detected.
@@ -110,6 +116,13 @@ namespace HL_PhysicsEngine
 					if (pairs[i].status & PxPairFlag::eNOTIFY_TOUCH_FOUND)
 					{
 						cerr << "onTrigger::eNOTIFY_TOUCH_FOUND" << endl;
+						touchCount++;
+						printf("Touch Count = ");
+						PxActor* otherActor = pairs[i].otherActor;
+
+						printf(std::to_string(touchCount).c_str());
+						printf(".\n");
+						
 						trigger = true;
 					}
 					//check if eNOTIFY_TOUCH_LOST trigger
@@ -188,7 +201,7 @@ namespace HL_PhysicsEngine
 	class MyScene : public Scene
 	{
 		Plane* plane;
-		Box* box, * box2;
+		Box *box, *box2;
 		MySimulationEventCallback* my_callback;
 		
 	public:
@@ -204,6 +217,9 @@ namespace HL_PhysicsEngine
 		{
 			px_scene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f);
 			px_scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+			px_scene->getVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES);
+			px_scene->getVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS);
+
 		}
 
 		//Custom scene initialisation
@@ -216,40 +232,101 @@ namespace HL_PhysicsEngine
 			///Initialise and set the customised event callback
 			my_callback = new MySimulationEventCallback();
 			px_scene->setSimulationEventCallback(my_callback);
+			my_callback->_Gscene = this;
+
 
 			plane = new Plane();
 			plane->Color(PxVec3(210.f/255.f,210.f/255.f,210.f/255.f));
 			Add(plane);
 
-			box = new Box(PxTransform(PxVec3(.0f,.5f,.0f)));
-			box->Color(color_palette[0]);
+			box = new Box(PxTransform(PxVec3(.0f,1.f,.0f)),PxVec3(0.5f,0.5f,0.5f),1.f);
+			box->Color(color_palette[3]);
+
+			box2 = new Box(PxTransform(PxVec3(.0f, 13.f, .0f)), PxVec3(0.5f, 0.5f, 0.5f), 1.f);
+			box2->Color(color_palette[4]);
 			//set collision filter flags
-			// box->SetupFiltering(FilterGroup::ACTOR0, FilterGroup::ACTOR1);
+			//box->SetupFiltering(FilterGroup::ACTOR0, FilterGroup::ACTOR1);
 			//use | operator to combine more actors e.g.
-			// box->SetupFiltering(FilterGroup::ACTOR0, FilterGroup::ACTOR1 | FilterGroup::ACTOR2);
+			//box->SetupFiltering(FilterGroup::ACTOR0, FilterGroup::ACTOR1 | FilterGroup::ACTOR2);
 			//don't forget to set your flags for the matching actor as well, e.g.:
-			// box2->SetupFiltering(FilterGroup::ACTOR1, FilterGroup::ACTOR0);
+			 //box2->SetupFiltering(FilterGroup::ACTOR1, FilterGroup::ACTOR0);
 			box->Name("Box1");
 			Add(box);
+			//Add(box2);
 
-			/*
-			//joint two boxes together
-			//the joint is fixed to the centre of the first box, oriented by 90 degrees around the Y axis
-			//and has the second object attached 5 meters away along the Y axis from the first object.
-			RevoluteJoint joint(box, PxTransform(PxVec3(0.f,0.f,0.f),PxQuat(PxPi/2,PxVec3(0.f,1.f,0.f))), box2, PxTransform(PxVec3(0.f,5.f,0.f)));
-			*/
+			//Remember to enable visualisation on joints
+			Trampoline* _nTrampoline = new Trampoline(PxVec3(1.f, 3.f, 1.f), 10.0f, 0.3f);
+
+			//_nTrampoline->AddToScene(this);
+
+			//JOINTS AND MOTORS
+			//
+			////joint two boxes together
+			////the joint is fixed to the centre of the first box, oriented by 90 degrees around the Y axis
+			////and has the second object attached 5 meters away along the Y axis from the first object.
+			///*PxQuat revoluteAngle = PxQuat(0 / 2, PxVec3(0.f, 1.f, .0f).getNormalized());
+			//RevoluteJoint* joint  = new RevoluteJoint(nullptr, PxTransform(PxVec3(0.f,5.f,0.f),revoluteAngle), box2, PxTransform(PxVec3(0.f,-2.0f,0.f)));
+			//RevoluteJoint* joint2 = new RevoluteJoint(nullptr, PxTransform(PxVec3(0.f, 5.f, 0.f),revoluteAngle), box, PxTransform(PxVec3(0.f, -3.1f, 0.f)));
+			//box->Get()->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+			//box2->Get()->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);*/
+
+			////planets
+			//Sphere* sun = new Sphere(PxTransform(PxVec3(0.0f, 10.0f, 0.0f)), 1.5f, 0.01f);
+			//Sphere* planet1 = new Sphere(PxTransform(PxVec3(0.0f, 4.0f, 10.0f)),1.f,0.01f);
+			//Sphere* planet2 = new Sphere(PxTransform(PxVec3(0.0f, 4.0f, 6.0f)),0.3f,0.01f);
+			//Sphere* planet3 = new Sphere(PxTransform(PxVec3(0.0f, 4.0f, 3.0f)), 0.6f, 0.01f);
+			//Sphere* moon = new Sphere(PxTransform(PxVec3(0.0f, 4.0f, 12.0f)), 0.2f, 0.01f);
+			//Add(sun);
+			//Add(planet1);
+			////Add(planet2);
+			////Add(planet3);
+			//Add(moon);
+			//sun->Get()->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+			//planet1->Get()->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+			//planet2->Get()->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+			//planet3->Get()->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+
+
+			//PxQuat revoluteAngle = PxQuat(PxPi / 2, PxVec3(0.f, 0.f, 1.f));
+			//RevoluteJoint* orbit1 = new RevoluteJoint(nullptr, PxTransform(PxVec3(0.f, 11.f, 0.f),revoluteAngle), planet1, PxTransform(PxVec3(0.f, 0.f, 10.f)));
+			//RevoluteJoint* orbit2 = new RevoluteJoint(nullptr, PxTransform(PxVec3(0.f, 11.f, 0.f),revoluteAngle), planet2, PxTransform(PxVec3(0.f, 0.f, 6.f)));
+			//RevoluteJoint* orbit3 = new RevoluteJoint(nullptr, PxTransform(PxVec3(0.f, 11.f, 0.f),revoluteAngle), planet3, PxTransform(PxVec3(0.f, 0.f, 3.f)));
+			//RevoluteJoint* moonOrbit = new RevoluteJoint(moon, PxTransform(PxVec3(0.f, 0.f, 2.f), revoluteAngle), planet1, PxTransform(PxVec3(0.f, 0.f, 0.f)));
+			//orbit1->DriveVelocity(100*0.00274);
+			//orbit1->SetLimits(0.2, 0.8);
+			////orbit2->DriveVelocity(1.5);
+			////orbit3->DriveVelocity(1.3);
+			//moonOrbit->DriveVelocity(100*0.03571);
+			//moonOrbit->SetLimits(0.2, 0.8);
+
+
+			///*joint->DriveVelocity(0.5f);
+			//joint2->DriveVelocity(3.f);*/
+
+			//Triggers
+			box->SetTrigger(true, 0);
+			box->SetKinematic(true, 0);
+
+			Sphere* sphere = new Sphere(PxTransform(3.f, 1.f, 0.f), 0.5f, 1.0f);
+			Add(sphere);
+
 		}
+		;
 
 		//Custom udpate function
 		virtual void CustomUpdate() 
 		{
+			for(HL_EventStruct evt : hl_events->GetEvents())
+
+
+
+			//printf("update loop finished\n");
 		}
 		virtual void CustomInput(HL_PhysicsEngine::KeyState key_state[])
 		{
-			//printf("Custom Input Called\n");
 			if (key_state['p'] == KeyState::DOWN )
 			{
-				//printf("Projectile Launched");
+				printf("Projectile Launched\n");
 				HL_Projectile* proj = new HL_Projectile(PxVec3(0,0,0), camDir);
 				Add(proj);
 

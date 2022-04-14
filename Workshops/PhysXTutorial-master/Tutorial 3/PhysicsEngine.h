@@ -4,6 +4,7 @@
 #include "PxPhysicsAPI.h"
 #include "Exception.h"
 #include "Extras\UserData.h"
+#include "HL_Events.h"
 #include <string>
 #include "KeyState.h"
 
@@ -134,6 +135,8 @@ namespace HL_PhysicsEngine
 		///Add actors
 		void Add(Actor* actor);
 
+		void Remove(Actor* actor);
+
 		///Get the PxScene object
 		PxScene* Get();
 
@@ -154,6 +157,8 @@ namespace HL_PhysicsEngine
 
 		///a list with all actors
 		std::vector<PxActor*> GetAllActors();
+
+		HL_Events* hl_events;
 
 	};
 

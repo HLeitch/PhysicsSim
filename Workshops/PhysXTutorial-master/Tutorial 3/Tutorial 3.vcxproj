@@ -27,6 +27,7 @@
     <ClInclude Include="Extras\HUD.h" />
     <ClInclude Include="Extras\Renderer.h" />
     <ClInclude Include="Extras\UserData.h" />
+    <ClInclude Include="HL_Events.h" />
     <ClInclude Include="HL_Projectile.h" />
     <ClInclude Include="HL_RectEnclosure.h" />
     <ClInclude Include="HL_StaticEnclosure.h" />
@@ -38,6 +39,7 @@
     <ClCompile Include="Extras\Camera.cpp" />
     <ClCompile Include="Extras\GLFontRenderer.cpp" />
     <ClCompile Include="Extras\Renderer.cpp" />
+    <ClCompile Include="HL_Events.cpp" />
     <ClCompile Include="HL_Projectile.cpp" />
     <ClCompile Include="HL_RectEnclosure.cpp" />
     <ClCompile Include="HL_StaticEnclosure.cpp" />
