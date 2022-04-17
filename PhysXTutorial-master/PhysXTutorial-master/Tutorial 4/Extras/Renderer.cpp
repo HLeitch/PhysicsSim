@@ -300,9 +300,9 @@ namespace VisualDebugger
 #if PX_PHYSICS_VERSION < 0x304000 // SDK 3.3
 				else if (actors[i]->isRigidActor()) {
 #else
-				else if (actors[i]->is<PxRigidBody>()) {
+				else if (actors[i]->is<PxRigidActor>()) {
 #endif
-					PxRigidBody* rigid_actor = (PxRigidBody*)actors[i];
+					PxRigidActor* rigid_actor = (PxRigidActor*)actors[i];
 					std::vector<PxShape*> shapes(rigid_actor->getNbShapes());
 					rigid_actor->getShapes((PxShape**)&shapes.front(), (PxU32)shapes.size());
 

@@ -120,6 +120,9 @@ namespace HL_PhysicsEngine
 						printf("Touch Count = ");
 						PxActor* otherActor = pairs[i].otherActor;
 
+						//BE WARNED CAN RETURN NULL IF NO RIGID BODY
+						HL_ADDFORCEEVENT* forceEvnt = new HL_ADDFORCEEVENT(pairs[i].otherActor->is<PxRigidBody>());
+						
 						printf(std::to_string(touchCount).c_str());
 						printf(".\n");
 						
@@ -202,6 +205,8 @@ namespace HL_PhysicsEngine
 	{
 		Plane* plane;
 		Box *box, *box2;
+		Sphere* sphere;
+
 		MySimulationEventCallback* my_callback;
 		
 	public:
@@ -307,7 +312,7 @@ namespace HL_PhysicsEngine
 			box->SetTrigger(true, 0);
 			box->SetKinematic(true, 0);
 
-			Sphere* sphere = new Sphere(PxTransform(3.f, 1.f, 0.f), 0.5f, 1.0f);
+			sphere = new Sphere(PxTransform(3.f, 1.f, 0.f), 0.5f, 1.0f);
 			Add(sphere);
 
 		}
@@ -316,8 +321,17 @@ namespace HL_PhysicsEngine
 		//Custom udpate function
 		virtual void CustomUpdate() 
 		{
-			for(HL_EventStruct evt : hl_events->GetEvents())
+			for (HL_EventStruct* evt : hl_events->GetEvents())
+			{
 
+				if (evt->type == HL_EventType::ADDFORCE)
+				{
+					printf("ADDFORCE event detected\n");
+					//evt->rigBody->addForce(PxVec3(0, 5, 0), PxForceMode::eVELOCITY_CHANGE);
+					
+				}
+			}
+			hl_events->ClearEvents();
 
 
 			//printf("update loop finished\n");

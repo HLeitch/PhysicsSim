@@ -4,13 +4,37 @@
 #include <iostream>
 #include <iomanip>
 
-namespace HL_PhysicsEngine
+namespace PhysicsEngine
 {
 	using namespace std;
 
 	//a list of colours: Circus Palette
 	static const PxVec3 color_palette[] = {PxVec3(46.f/255.f,9.f/255.f,39.f/255.f),PxVec3(217.f/255.f,0.f/255.f,0.f/255.f),
 		PxVec3(255.f/255.f,45.f/255.f,0.f/255.f),PxVec3(255.f/255.f,140.f/255.f,54.f/255.f),PxVec3(4.f/255.f,117.f/255.f,111.f/255.f)};
+
+	//pyramid vertices
+	static PxVec3 pyramid_verts[] = {PxVec3(0,1,0), PxVec3(1,0,0), PxVec3(-1,0,0), PxVec3(0,0,1), PxVec3(0,0,-1)};
+	//pyramid triangles: a list of three vertices for each triangle e.g. the first triangle consists of vertices 1, 4 and 0
+	//vertices have to be specified in a counter-clockwise order to assure the correct shading in rendering
+	static PxU32 pyramid_trigs[] = {1, 4, 0, 3, 1, 0, 2, 3, 0, 4, 2, 0, 3, 2, 1, 2, 4, 1};
+
+	class Pyramid : public ConvexMesh
+	{
+	public:
+		Pyramid(PxTransform pose=PxTransform(PxIdentity), PxReal density=1.f) :
+			ConvexMesh(vector<PxVec3>(begin(pyramid_verts),end(pyramid_verts)), pose, density)
+		{
+		}
+	};
+
+	class PyramidStatic : public TriangleMesh
+	{
+	public:
+		PyramidStatic(PxTransform pose=PxTransform(PxIdentity)) :
+			TriangleMesh(vector<PxVec3>(begin(pyramid_verts),end(pyramid_verts)), vector<PxU32>(begin(pyramid_trigs),end(pyramid_trigs)), pose)
+		{
+		}
+	};
 
 	struct FilterGroup
 	{
@@ -21,6 +45,44 @@ namespace HL_PhysicsEngine
 			ACTOR2		= (1 << 2)
 			//add more if you need
 		};
+	};
+
+	///An example class showing the use of springs (distance joints).
+	class Trampoline
+	{
+		vector<DistanceJoint*> springs;
+		Box *bottom, *top;
+
+	public:
+		Trampoline(const PxVec3& dimensions=PxVec3(1.f,1.f,1.f), PxReal stiffness=1.f, PxReal damping=1.f)
+		{
+			PxReal thickness = .1f;
+			bottom = new Box(PxTransform(PxVec3(0.f,thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
+			top = new Box(PxTransform(PxVec3(0.f,dimensions.y+thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
+			springs.resize(4);
+			springs[0] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x,thickness,dimensions.z)), top, PxTransform(PxVec3(dimensions.x,-dimensions.y,dimensions.z)));
+			springs[1] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x,thickness,-dimensions.z)), top, PxTransform(PxVec3(dimensions.x,-dimensions.y,-dimensions.z)));
+			springs[2] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x,thickness,dimensions.z)), top, PxTransform(PxVec3(-dimensions.x,-dimensions.y,dimensions.z)));
+			springs[3] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x,thickness,-dimensions.z)), top, PxTransform(PxVec3(-dimensions.x,-dimensions.y,-dimensions.z)));
+
+			for (unsigned int i = 0; i < springs.size(); i++)
+			{
+				springs[i]->Stiffness(stiffness);
+				springs[i]->Damping(damping);
+			}
+		}
+
+		void AddToScene(Scene* scene)
+		{
+			scene->Add(bottom);
+			scene->Add(top);
+		}
+
+		~Trampoline()
+		{
+			for (unsigned int i = 0; i < springs.size(); i++)
+				delete springs[i];
+		}
 	};
 
 	///A customised collision class, implemneting various callbacks
@@ -82,7 +144,7 @@ namespace HL_PhysicsEngine
 		virtual void onWake(PxActor **actors, PxU32 count) {}
 		virtual void onSleep(PxActor **actors, PxU32 count) {}
 #if PX_PHYSICS_VERSION >= 0x304000
-		virtual void onAdvance(const PxRigidActor *const *bodyBuffer, const PxTransform *poseBuffer, const PxU32 count) {}
+		virtual void onAdvance(const PxRigidBody *const *bodyBuffer, const PxTransform *poseBuffer, const PxU32 count) {}
 #endif
 	};
 
@@ -123,8 +185,7 @@ namespace HL_PhysicsEngine
 	class MyScene : public Scene
 	{
 		Plane* plane;
-		Cloth* cloth;
-		Box* box;
+		Box* box, * box2;
 		MySimulationEventCallback* my_callback;
 		
 	public:
@@ -137,12 +198,6 @@ namespace HL_PhysicsEngine
 		{
 			px_scene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f);
 			px_scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
-
-			//cloth visualisation
-			px_scene->setVisualizationParameter(PxVisualizationParameter::eCLOTH_HORIZONTAL, 1.0f);
-			px_scene->setVisualizationParameter(PxVisualizationParameter::eCLOTH_VERTICAL, 1.0f);
-			px_scene->setVisualizationParameter(PxVisualizationParameter::eCLOTH_BENDING, 1.0f);
-			px_scene->setVisualizationParameter(PxVisualizationParameter::eCLOTH_SHEARING, 1.0f);
 		}
 
 		//Custom scene initialisation
@@ -160,16 +215,23 @@ namespace HL_PhysicsEngine
 			plane->Color(PxVec3(210.f/255.f,210.f/255.f,210.f/255.f));
 			Add(plane);
 
-			cloth = new Cloth(PxTransform(PxVec3(-4.f,9.f,0.f)), PxVec2(8.f,8.f), 40, 40);
-			cloth->Color(color_palette[2]);
-			Add(cloth);
-
-			box = new Box(PxTransform(PxVec3(0.f,2.f,0.f)),PxVec3(2.f,2.f,2.f));
-			box->Color(color_palette[3]);
+			box = new Box(PxTransform(PxVec3(.0f,.5f,.0f)));
+			box->Color(color_palette[0]);
+			//set collision filter flags
+			// box->SetupFiltering(FilterGroup::ACTOR0, FilterGroup::ACTOR1);
+			//use | operator to combine more actors e.g.
+			// box->SetupFiltering(FilterGroup::ACTOR0, FilterGroup::ACTOR1 | FilterGroup::ACTOR2);
+			//don't forget to set your flags for the matching actor as well, e.g.:
+			// box2->SetupFiltering(FilterGroup::ACTOR1, FilterGroup::ACTOR0);
+			box->Name("Box1");
 			Add(box);
 
-			//setting custom cloth parameters
-			//((PxCloth*)cloth->Get())->setStretchConfig(PxClothFabricPhaseType::eBENDING, PxClothStretchConfig(1.f));
+			/*
+			//joint two boxes together
+			//the joint is fixed to the centre of the first box, oriented by 90 degrees around the Y axis
+			//and has the second object attached 5 meters away along the Y axis from the first object.
+			RevoluteJoint joint(box, PxTransform(PxVec3(0.f,0.f,0.f),PxQuat(PxPi/2,PxVec3(0.f,1.f,0.f))), box2, PxTransform(PxVec3(0.f,5.f,0.f)));
+			*/
 		}
 
 		//Custom udpate function

@@ -3,9 +3,8 @@
 #include "PhysicsEngine.h"
 #include <iostream>
 #include <iomanip>
-#include <PxPhysicsAPI.h>
 
-namespace HL_PhysicsEngine
+namespace PhysicsEngine
 {
 	///Plane class
 	class Plane : public StaticActor
@@ -32,7 +31,6 @@ namespace HL_PhysicsEngine
 		{ 
 			CreateShape(PxSphereGeometry(radius), density);
 		}
-		
 	};
 
 	///Box class
@@ -166,11 +164,7 @@ namespace HL_PhysicsEngine
 	///Revolute Joint
 	class RevoluteJoint : public Joint
 	{
-	private:
-		PxReal _gearRatio;
-
 	public:
-		
 		RevoluteJoint(Actor* actor0, const PxTransform& localFrame0, Actor* actor1, const PxTransform& localFrame1)
 		{
 			PxRigidActor* px_actor0 = 0;
@@ -179,17 +173,6 @@ namespace HL_PhysicsEngine
 
 			joint = PxRevoluteJointCreate(*GetPhysics(), px_actor0, localFrame0, (PxRigidActor*)actor1->Get(), localFrame1);
 			joint->setConstraintFlag(PxConstraintFlag::eVISUALIZATION,true);
-		}
-
-		//sets the gear ratio from the first object to the second
-		void SetGearRatio(PxReal ratio)
-		{
-
-		}
-		PxReal GetGearRatio()
-		{
-		
-			return(_gearRatio);
 		}
 
 		void DriveVelocity(PxReal value)

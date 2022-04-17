@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace HL_PhysicsEngine
+namespace PhysicsEngine
 {
 	using namespace std;
 
@@ -82,7 +82,7 @@ namespace HL_PhysicsEngine
 		virtual void onWake(PxActor **actors, PxU32 count) {}
 		virtual void onSleep(PxActor **actors, PxU32 count) {}
 #if PX_PHYSICS_VERSION >= 0x304000
-		virtual void onAdvance(const PxRigidActor *const *bodyBuffer, const PxTransform *poseBuffer, const PxU32 count) {}
+		virtual void onAdvance(const PxRigidBody *const *bodyBuffer, const PxTransform *poseBuffer, const PxU32 count) {}
 #endif
 	};
 

@@ -1,7 +1,7 @@
 #include "PhysicsEngine.h"
 #include <iostream>
 
-namespace HL_PhysicsEngine
+namespace PhysicsEngine
 {
 	using namespace physx;
 	using namespace std;
@@ -15,7 +15,7 @@ namespace HL_PhysicsEngine
 #if PX_PHYSICS_VERSION < 0x304000 // SDK 3.3
 	debugger::comm::PvdConnection* pvd = 0;
 #else
-	PxPvd* pvd = 0;
+	PxPvd*  pvd = 0;
 #endif
 	PxPhysics* physics = 0;
 	PxCooking* cooking = 0;
@@ -190,7 +190,6 @@ namespace HL_PhysicsEngine
 		// word1 = ID mask to filter pairs that trigger a contact callback
 	}
 
-
 	void Actor::Name(const string& new_name)
 	{
 		name = new_name;
@@ -285,8 +284,6 @@ namespace HL_PhysicsEngine
 		selected_actor = 0;
 
 		SelectNextActor();
-
-		hl_events = hl_events->_GetInstance();
 	}
 
 	void Scene::Update(PxReal dt)
@@ -300,26 +297,10 @@ namespace HL_PhysicsEngine
 		px_scene->fetchResults(true);
 	}
 
-	void Scene::Update(PxReal dt, KeyState key_state[])
-	{
-		if (pause)
-			return;
-
-		CustomUpdate();
-		CustomInput(key_state);
-
-		px_scene->simulate(dt);
-		px_scene->fetchResults(true);
-	}
 	void Scene::Add(Actor* actor)
 	{
 		px_scene->addActor(*actor->Get());
 	}
-	void Scene::Remove(Actor* actor)
-	{
-		px_scene->removeActor(*actor->Get());
-	}
-
 
 	PxScene* Scene::Get()
 	{

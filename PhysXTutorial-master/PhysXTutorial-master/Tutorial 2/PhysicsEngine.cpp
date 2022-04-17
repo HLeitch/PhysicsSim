@@ -1,7 +1,7 @@
 #include "PhysicsEngine.h"
 #include <iostream>
 
-namespace HL_PhysicsEngine
+namespace PhysicsEngine
 {
 	using namespace physx;
 	using namespace std;
@@ -15,7 +15,7 @@ namespace HL_PhysicsEngine
 #if PX_PHYSICS_VERSION < 0x304000 // SDK 3.3
 	debugger::comm::PvdConnection* pvd = 0;
 #else
-	PxPvd* pvd = 0;
+	PxPvd*  pvd = 0;
 #endif
 	PxPhysics* physics = 0;
 	PxCooking* cooking = 0;
@@ -61,7 +61,7 @@ namespace HL_PhysicsEngine
 		if (!cooking)
 			cooking = PxCreateCooking(PX_PHYSICS_VERSION, *foundation, PxCookingParams(PxTolerancesScale()));
 
-		if (!cooking)
+		if(!cooking)
 			throw new Exception("PhysicsEngine::PxInit, Could not initialise the cooking component.");
 
 		//create a deafult material
@@ -80,9 +80,9 @@ namespace HL_PhysicsEngine
 			foundation->release();
 	}
 
-	PxPhysics* GetPhysics()
-	{
-		return physics;
+	PxPhysics* GetPhysics() 
+	{ 
+		return physics; 
 	}
 
 	PxCooking* GetCooking()
@@ -99,7 +99,7 @@ namespace HL_PhysicsEngine
 			return 0;
 	}
 
-	PxMaterial* CreateMaterial(PxReal sf, PxReal df, PxReal cr)
+	PxMaterial* CreateMaterial(PxReal sf, PxReal df, PxReal cr) 
 	{
 		return physics->createMaterial(sf, df, cr);
 	}
@@ -130,8 +130,8 @@ namespace HL_PhysicsEngine
 	{
 		if (shape_indx < colors.size())
 			return &colors[shape_indx];
-		else
-			return 0;
+		else 
+			return 0;			
 	}
 
 	void Actor::Material(PxMaterial* new_material, PxU32 shape_index)
@@ -169,28 +169,6 @@ namespace HL_PhysicsEngine
 			return std::vector<PxShape*>();
 	}
 
-	void Actor::SetTrigger(bool value, PxU32 shape_index)
-	{
-		std::vector<PxShape*> shape_list = GetShapes(shape_index);
-		for (PxU32 i = 0; i < shape_list.size(); i++)
-		{
-			shape_list[i]->setFlag(PxShapeFlag::eSIMULATION_SHAPE, !value);
-			shape_list[i]->setFlag(PxShapeFlag::eTRIGGER_SHAPE, value);
-		}
-	}
-
-	void Actor::SetupFiltering(PxU32 filterGroup, PxU32 filterMask, PxU32 shape_index)
-	{
-		std::vector<PxShape*> shape_list = GetShapes(shape_index);
-		for (PxU32 i = 0; i < shape_list.size(); i++)
-			shape_list[i]->setSimulationFilterData(PxFilterData(filterGroup, filterMask, 0, 0));
-
-		// PxFilterData(word0, word1, 0, 0)
-		// word0 = own ID
-		// word1 = ID mask to filter pairs that trigger a contact callback
-	}
-
-
 	void Actor::Name(const string& new_name)
 	{
 		name = new_name;
@@ -216,7 +194,7 @@ namespace HL_PhysicsEngine
 
 	void DynamicActor::CreateShape(const PxGeometry& geometry, PxReal density)
 	{
-		PxShape* shape = ((PxRigidDynamic*)actor)->createShape(geometry, *GetMaterial());
+		PxShape* shape = ((PxRigidDynamic*)actor)->createShape(geometry,*GetMaterial());
 		PxRigidBodyExt::updateMassAndInertia(*(PxRigidDynamic*)actor, density);
 		colors.push_back(default_color);
 		//pass the color pointers to the renderer
@@ -248,7 +226,7 @@ namespace HL_PhysicsEngine
 
 	void StaticActor::CreateShape(const PxGeometry& geometry, PxReal density)
 	{
-		PxShape* shape = ((PxRigidStatic*)actor)->createShape(geometry, *GetMaterial());
+		PxShape* shape = ((PxRigidStatic*)actor)->createShape(geometry,*GetMaterial());
 		colors.push_back(default_color);
 		//pass the color pointers to the renderer
 		shape->userData = new UserData();
@@ -262,7 +240,7 @@ namespace HL_PhysicsEngine
 		//scene
 		PxSceneDesc sceneDesc(GetPhysics()->getTolerancesScale());
 
-		if (!sceneDesc.cpuDispatcher)
+		if(!sceneDesc.cpuDispatcher)
 		{
 			PxDefaultCpuDispatcher* mCpuDispatcher = PxDefaultCpuDispatcherCreate(1);
 			sceneDesc.cpuDispatcher = mCpuDispatcher;
@@ -285,8 +263,6 @@ namespace HL_PhysicsEngine
 		selected_actor = 0;
 
 		SelectNextActor();
-
-		hl_events = hl_events->_GetInstance();
 	}
 
 	void Scene::Update(PxReal dt)
@@ -300,30 +276,14 @@ namespace HL_PhysicsEngine
 		px_scene->fetchResults(true);
 	}
 
-	void Scene::Update(PxReal dt, KeyState key_state[])
-	{
-		if (pause)
-			return;
-
-		CustomUpdate();
-		CustomInput(key_state);
-
-		px_scene->simulate(dt);
-		px_scene->fetchResults(true);
-	}
 	void Scene::Add(Actor* actor)
 	{
 		px_scene->addActor(*actor->Get());
 	}
-	void Scene::Remove(Actor* actor)
-	{
-		px_scene->removeActor(*actor->Get());
-	}
 
-
-	PxScene* Scene::Get()
-	{
-		return px_scene;
+	PxScene* Scene::Get() 
+	{ 
+		return px_scene; 
 	}
 
 	void Scene::Reset()
@@ -337,8 +297,8 @@ namespace HL_PhysicsEngine
 		pause = value;
 	}
 
-	bool Scene::Pause()
-	{
+	bool Scene::Pause() 
+	{ 
 		return pause;
 	}
 
@@ -364,7 +324,7 @@ namespace HL_PhysicsEngine
 					{
 						HighlightOff(selected_actor);
 						//select the next actor
-						selected_actor = actors[(i + 1) % actors.size()];
+						selected_actor = actors[(i+1)%actors.size()];
 						break;
 					}
 			}
@@ -404,7 +364,7 @@ namespace HL_PhysicsEngine
 		{
 			PxVec3* color = ((UserData*)shapes[i]->userData)->color;
 			sactor_color_orig.push_back(*color);
-			*color += PxVec3(.2f, .2f, .2f);
+			*color += PxVec3(.2f,.2f,.2f);
 		}
 	}
 
