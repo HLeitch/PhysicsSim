@@ -20,6 +20,6 @@ namespace HL_PhysicsEngine
 
 	HL_PhysicsEngine::HL_Projectile::HL_Projectile(PxVec3 location) : DynamicActor(PxTransform(location))
 	{
-		this->CreateShape(PxSphereGeometry(0.1), .5f);
+		this->CreateShape(PxSphereGeometry(0.1), 1.f);
 	};
 }

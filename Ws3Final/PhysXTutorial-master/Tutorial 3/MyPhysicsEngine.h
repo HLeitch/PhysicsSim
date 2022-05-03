@@ -7,6 +7,9 @@
 #include <iomanip>
 #include "KeyState.h"
 #include "Domino.h"
+#include "HL_StaticEnclosure.h"
+#include "HL_Stairs.h"
+#include "HL_Materials.h"
 
 namespace HL_PhysicsEngine
 {
@@ -52,22 +55,48 @@ namespace HL_PhysicsEngine
 	};
 
 	///An example class showing the use of springs (distance joints).
+	///Trampoline has been modified to have a static base.
 	class Trampoline
 	{
 		vector<DistanceJoint*> springs;
-		Box *bottom, *top;
+		Box* botto;
+		StaticBox* bottom;
 
-	public:
+	public: 
+		Box* top;
 		Trampoline(const PxVec3& dimensions=PxVec3(1.f,1.f,1.f), PxReal stiffness=1.f, PxReal damping=1.f)
 		{
 			PxReal thickness = .1f;
-			bottom = new Box(PxTransform(PxVec3(0.f,thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
+			bottom = new StaticBox(PxTransform(PxVec3(0.f,thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
 			top = new Box(PxTransform(PxVec3(0.f,dimensions.y+thickness,0.f)),PxVec3(dimensions.x,thickness,dimensions.z));
 			springs.resize(4);
 			springs[0] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x,thickness,dimensions.z)), top, PxTransform(PxVec3(dimensions.x,-dimensions.y,dimensions.z)));
 			springs[1] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x,thickness,-dimensions.z)), top, PxTransform(PxVec3(dimensions.x,-dimensions.y,-dimensions.z)));
 			springs[2] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x,thickness,dimensions.z)), top, PxTransform(PxVec3(-dimensions.x,-dimensions.y,dimensions.z)));
 			springs[3] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x,thickness,-dimensions.z)), top, PxTransform(PxVec3(-dimensions.x,-dimensions.y,-dimensions.z)));
+
+
+			for (unsigned int i = 0; i < springs.size(); i++)
+			{
+				springs[i]->Stiffness(stiffness);
+				springs[i]->Damping(damping);
+			}
+		}
+
+		Trampoline(const PxVec3& position = PxVec3(0.f, 0.f, 0.f), const PxVec3& dimensions = PxVec3(1.f, 1.f, 1.f), PxReal stiffness = 1.f, PxReal damping = 1.f)
+		{
+			PxReal thickness = .1f;
+			bottom = new StaticBox(PxTransform(PxVec3(0.f + position.x, thickness + position.y, 0.f + position.z)), PxVec3(dimensions.x, thickness, dimensions.z));
+			top = new Box(PxTransform(PxVec3(0.f + position.x, dimensions.y + thickness + position.y, 0.f + position.z)), PxVec3(dimensions.x, thickness, dimensions.z));
+			PxMaterial* trampMat = GetMaterial(PxU32(HL_Materials::basic));
+			top->GetShape()->setMaterials( &trampMat,1);
+			springs.resize(4);
+			springs[0] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x, thickness, dimensions.z)), top, PxTransform(PxVec3(dimensions.x, -dimensions.y, dimensions.z)));
+			springs[1] = new DistanceJoint(bottom, PxTransform(PxVec3(dimensions.x, thickness, -dimensions.z)), top, PxTransform(PxVec3(dimensions.x, -dimensions.y, -dimensions.z)));
+			springs[2] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x, thickness, dimensions.z)), top, PxTransform(PxVec3(-dimensions.x, -dimensions.y, dimensions.z)));
+			springs[3] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x, thickness, -dimensions.z)), top, PxTransform(PxVec3(-dimensions.x, -dimensions.y, -dimensions.z)));
+
+			//PxPrismaticJointCreate(*GetPhysics(), bottom->GetShape()->getActor(), PxTransform(PxQuat(0, PxVec3(0.f, 1.f, 0.0f).getNormalized())), top->GetShape()->getActor(), PxTransform(0.f, dimensions.y + thickness, 0.f));
 
 			for (unsigned int i = 0; i < springs.size(); i++)
 			{
@@ -144,7 +173,7 @@ namespace HL_PhysicsEngine
 		///Method called when the contact by the filter shader is detected.
 		virtual void onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs) 
 		{
-			cerr << "Contact found between " << pairHeader.actors[0]->getName() << " " << pairHeader.actors[1]->getName() << endl;
+			cout << "Contact found between " << pairHeader.actors[0]->getName() << " " << pairHeader.actors[1]->getName() << endl;
 
 			//check all pairs
 			for (PxU32 i = 0; i < nbPairs; i++)
@@ -152,12 +181,12 @@ namespace HL_PhysicsEngine
 				//check eNOTIFY_TOUCH_FOUND
 				if (pairs[i].events & PxPairFlag::eNOTIFY_TOUCH_FOUND)
 				{
-					cerr << "onContact::eNOTIFY_TOUCH_FOUND" << endl;
+					//cerr << "onContact::eNOTIFY_TOUCH_FOUND" << endl;
 				}
 				//check eNOTIFY_TOUCH_LOST
 				if (pairs[i].events & PxPairFlag::eNOTIFY_TOUCH_LOST)
 				{
-					cerr << "onContact::eNOTIFY_TOUCH_LOST" << endl;
+					//cerr << "onContact::eNOTIFY_TOUCH_LOST" << endl;
 				}
 			}
 		}
@@ -232,18 +261,20 @@ namespace HL_PhysicsEngine
 		virtual void CustomInit() 
 		{
 			SetVisualisation();
+			HL_MaterialsObject* _materials = new HL_MaterialsObject();
 
-			GetMaterial()->setDynamicFriction(.2f);
-			GetMaterial()->setRestitution(0.3f);
+			/*GetMaterial()->setDynamicFriction(.1f);
+			GetMaterial()->setStaticFriction(0.5f);
+			GetMaterial()->setRestitution(0.4f);*/
 
 			///Initialise and set the customised event callback
 			my_callback = new MySimulationEventCallback();
 			px_scene->setSimulationEventCallback(my_callback);
 			my_callback->_Gscene = this;
 
-
 			plane = new Plane();
 			plane->Color(PxVec3(210.f / 255.f, 210.f / 255.f, 210.f / 255.f));
+			plane->Material(GetMaterial(HL_Materials::wood), 0);
 			Add(plane);
 
 			box = new Box(PxTransform(PxVec3(.0f, 1.f, .0f)), PxVec3(0.5f, 0.5f, 0.5f), 1.f);
@@ -261,10 +292,7 @@ namespace HL_PhysicsEngine
 			Add(box);
 			//Add(box2);
 
-			//Remember to enable visualisation on joints
-			Trampoline* _nTrampoline = new Trampoline(PxVec3(1.f, 3.f, 1.f), 10.0f, 0.3f);
 
-			//_nTrampoline->AddToScene(this);
 
 			//JOINTS AND MOTORS
 			//
@@ -311,40 +339,83 @@ namespace HL_PhysicsEngine
 			//joint2->DriveVelocity(3.f);*/
 
 			//Triggers
-			box->SetTrigger(true, 0);
+			//box->SetTrigger(true, 0);
 			box->SetKinematic(true, 0);
 
-			sphere = new Sphere(PxTransform(-3.f, 0.5f, -19.f), 0.5f, 0.1f);
-			Add(sphere);
-			PxQuat revoluteAngle = PxQuat(PxPi / 2, PxVec3(0.f, 0.f, 1.f));
+			sphere = new Sphere(PxTransform(-3.f, 0.5f, -19.f), 0.5f, 1.f);
+			//Add(sphere);
+			PxQuat revoluteAngle = PxQuat(PxPi / 2, PxVec3(1.f, 0.f, 0.f));
 
 
-			HL_Domino* domino = new HL_Domino(PxTransform(PxVec3(-2, 1, 0)));
+			HL_Domino* domino = new HL_Domino(PxTransform(PxVec3(5, 1, 0)));
 			domino->Color(PxVec3(0, 0, 0));
 			Add(domino);
-			RevoluteJoint* wheelTest = new RevoluteJoint(domino, PxTransform(0.f, 0.f, 0.f, PxQuat(revoluteAngle)), sphere, PxTransform(PxVec3(0, 0, 1)));
-			wheelTest->DriveVelocity(1.2f);
+			SphericalJoint* wheelTest = new SphericalJoint(domino, PxTransform(0.f, 0.f, 0.f, PxQuat(revoluteAngle)), sphere, PxTransform(PxVec3(0, 0, 1)));
+			//wheelTest->DriveVelocity(1.2f);
 
-			HL_DominoContainer* domcon = new HL_DominoContainer(PxVec3(-3, 0.5, -18), PxVec3(-3, 0.5, 0));
+			HL_DominoContainer* domcon = new HL_DominoContainer(PxVec3(-0, 0.5, 0), PxVec3(8, 0.5, 0));
 			for (HL_Domino* dom : domcon->dominoesContained)
 			{
 				dom->Color(PxVec3(0, 0, 0));
+				dom->Material(_materials->plasticMaterial);
 				Add(dom);
 			}
 
-			HL_DominoContainer* domcon2 = new HL_DominoContainer(PxVec3(-3, 0.5, -22), PxVec3(-3, 0.5, -30));
+			HL_DominoContainer* domcon2 = new HL_DominoContainer(PxVec3(-0, 0.5, -0.5), PxVec3(-3, 0.5, -10));
 			for (HL_Domino* dom : domcon2->dominoesContained)
 			{
 				dom->Color(PxVec3(0, 0, 0));
+				dom->Material(_materials->plasticMaterial);
 				Add(dom);
 			}
 
-			HL_DominoContainer* domcon3 = new HL_DominoContainer(PxVec3(-2.5, 0.5, -22), PxVec3(-10, 0.5, -30));
+
+
+			//Beginning of Domino Run. Shelf with dominoes running across, gradually getting larger-eventually moving a rubber ball.
+			StaticBox* shelf = new StaticBox(PxTransform(-40, 40, 0), PxVec3(19, 0.5, 7));
+			Add(shelf);
+
+			HL_DominoContainer* domcon3 = new HL_DominoContainer(PxVec3(-58, 41, 0), PxVec3(-25, 41, 0));
 			for (HL_Domino* dom : domcon3->dominoesContained)
 			{
 				dom->Color(PxVec3(0, 0, 0));
+				dom->Material(_materials->plasticMaterial);
 				Add(dom);
 			}
+			sphere = new Sphere(PxTransform(-24.f, 41.f, 0.f), 0.5f, 10.f);
+			Add(sphere);
+			sphere->Material(_materials->rubberMaterial,0);
+
+			Sphere* sphere2 = new Sphere(PxTransform(-40.f, 43.f, 0.f), 0.8f, 1.f);
+			Add(sphere2);
+
+			//Remember to enable visualisation on joints
+			Trampoline* _nTrampoline = new Trampoline(PxVec3(-18.f,0.f,0.f),PxVec3(2.f, 2.f, 2.f), 250.0f, 3.f);
+			PxMaterial* trampMat = GetMaterial(HL_Materials::trampoline);
+			_nTrampoline->top->GetShape()->setMaterials(&_materials->TrampolineMaterial,1);
+			_nTrampoline->AddToScene(this);
+			
+/*
+			for (int i = 0; i < 20; i++)
+			{
+				HL_DominoContainer* dominoRow = new HL_DominoContainer(PxVec3(20, 0.5, 12 + i), PxVec3(0, 0.5, 12 + i));
+				for (HL_Domino* dom : dominoRow->dominoesContained)
+				{
+					dom->Color(PxVec3(0, 0, 0));
+					Add(dom);
+				}
+			}
+			Box* door = new Box(PxTransform(0, 4, 20), PxVec3(10, 0.03, 3.5), .5f);
+			RevoluteJoint* doorJoint = new RevoluteJoint(nullptr, PxTransform(-1.5, 6.5, 20, PxQuat(PxPi / 2, PxVec3(0.f, 1.f, 0.0f).getNormalized())), door, PxTransform(0, 0, 3));
+			Add(door);
+
+
+			HL_Stairs* stairs = new HL_Stairs(PxVec3(20, 20, 12), PxVec3(13, 0.5, 0));
+			for (StaticBox* stair : stairs->_stairs)
+			{
+				Add(stair);
+			}
+			*/
 		}
 
 		//Custom udpate function

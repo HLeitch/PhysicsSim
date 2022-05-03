@@ -29,11 +29,14 @@
     <ClInclude Include="Extras\Renderer.h" />
     <ClInclude Include="Extras\UserData.h" />
     <ClInclude Include="HL_Events.h" />
+    <ClInclude Include="HL_Materials.h" />
     <ClInclude Include="HL_Projectile.h" />
     <ClInclude Include="HL_RectEnclosure.h" />
+    <ClInclude Include="HL_Stairs.h" />
     <ClInclude Include="HL_StaticEnclosure.h" />
     <ClInclude Include="MyPhysicsEngine.h" />
     <ClInclude Include="PhysicsEngine.h" />
+    <ClInclude Include="Vehicle.h" />
     <ClInclude Include="VisualDebugger.h" />
   </ItemGroup>
   <ItemGroup>
@@ -42,11 +45,14 @@
     <ClCompile Include="Extras\GLFontRenderer.cpp" />
     <ClCompile Include="Extras\Renderer.cpp" />
     <ClCompile Include="HL_Events.cpp" />
+    <ClCompile Include="HL_Materials.cpp" />
     <ClCompile Include="HL_Projectile.cpp" />
     <ClCompile Include="HL_RectEnclosure.cpp" />
+    <ClCompile Include="HL_Stairs.cpp" />
     <ClCompile Include="HL_StaticEnclosure.cpp" />
     <ClCompile Include="KeyState.h" />
     <ClCompile Include="PhysicsEngine.cpp" />
+    <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="VisualDebugger.cpp" />
     <ClCompile Include="Tutorial 3.cpp" />
   </ItemGroup>

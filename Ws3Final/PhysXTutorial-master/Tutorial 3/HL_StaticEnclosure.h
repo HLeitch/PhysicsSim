@@ -22,4 +22,17 @@ namespace HL_PhysicsEngine
 
 
     };
+
+    class HL_DynamicEnclosure :public ConvexMesh
+    {
+    public:
+        HL_DynamicEnclosure(PxReal width, PxReal height, PxReal depth, PxReal wallThck, const PxTransform& pose = PxTransform(PxIdentity),PxReal density = PxReal(1.f));
+
+    private:
+        static std::vector<PxVec3>* SetVerts(PxReal width, PxReal height, PxReal depth, PxReal wallThck);
+        std::vector<PxVec3>* GetVerts(PxReal width = 10, PxReal height = 10, PxReal depth = 10, PxReal wallThck = 1);
+        std::vector<PxVec3>* _scaledVerts = nullptr;
+
+
+    };
 }

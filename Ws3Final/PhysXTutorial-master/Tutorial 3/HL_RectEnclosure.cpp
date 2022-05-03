@@ -1,6 +1,6 @@
 #include "HL_RectEnclosure.h"
 
-HL_PhysicsEngine::HL_RectEnclosure::HL_RectEnclosure(PxTransform pose, PxVec3 dimensions, PxReal wallThickness, PxReal density) : StaticActor(pose)
+HL_PhysicsEngine::HL_RectEnclosure::HL_RectEnclosure(PxTransform pose, PxVec3 dimensions, PxReal wallThickness, PxReal density) : DynamicActor(pose)
 {
 	this->CreateShape(PxBoxGeometry(dimensions.x, wallThickness, dimensions.z), density);
 	GetShape(0)->setLocalPose(PxTransform(PxVec3(0.f,-dimensions.y,0.f)));
