@@ -4,8 +4,8 @@
 namespace HL_PhysicsEngine
 {
 
-    static const PxVec3 dominoDimensions = PxVec3(0.02, 0.04, 0.01);
-    static const PxReal dominoDensity = PxReal(3.f);
+    static const PxVec3 dominoDimensions = PxVec3(0.2, 0.3, 0.06);
+    static const PxReal dominoDensity = PxReal(2.f);
     class HL_Domino :
         public Box
     {
@@ -32,6 +32,19 @@ namespace HL_PhysicsEngine
         void AddToScene(Scene* scene);
         vector<HL_DominoContainer*> DominoContainersHeld;
         vector<Box*> turners;
+
+        vector<bool> PixelValues = { 0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,1,1,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,0,0,0,
+0,1,0,0,1,0,1,1,1,1 };
+
+        void ApplyPixels(vector<bool> vals);
 
         HL_Image(PxVec3 position,PxVec3 dimensions,PxVec3 domDims = dominoDimensions);
 

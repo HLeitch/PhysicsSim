@@ -96,7 +96,7 @@ namespace HL_PhysicsEngine
 			springs[2] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x, thickness, dimensions.z)), top, PxTransform(PxVec3(-dimensions.x, -dimensions.y, dimensions.z)));
 			springs[3] = new DistanceJoint(bottom, PxTransform(PxVec3(-dimensions.x, thickness, -dimensions.z)), top, PxTransform(PxVec3(-dimensions.x, -dimensions.y, -dimensions.z)));
 
-			//PxPrismaticJointCreate(*GetPhysics(), bottom->GetShape()->getActor(), PxTransform(PxQuat(0, PxVec3(0.f, 1.f, 0.0f).getNormalized())), top->GetShape()->getActor(), PxTransform(0.f, dimensions.y + thickness, 0.f));
+			PxPrismaticJointCreate(*GetPhysics(), bottom->GetShape()->getActor(), PxTransform(PxQuat(PxPi, PxVec3(0.f, 0.f, 1.0f).getNormalized())), top->GetShape()->getActor(), PxTransform(0.f, dimensions.y + thickness, 0.f));
 
 			for (unsigned int i = 0; i < springs.size(); i++)
 			{
@@ -384,7 +384,7 @@ namespace HL_PhysicsEngine
 				dom->Material(_materials->plasticMaterial);
 				Add(dom);
 			}
-			sphere = new Sphere(PxTransform(-24.f, 41.f, 0.f), 0.5f, 10.f);
+			sphere = new Sphere(PxTransform(-18.f, 41.f, 0.f), 0.5f, 10.f);
 			Add(sphere);
 			sphere->Material(_materials->rubberMaterial,0);
 
@@ -398,7 +398,7 @@ namespace HL_PhysicsEngine
 			_nTrampoline->AddToScene(this);
 			
 
-			HL_Image* img = new HL_Image(PxVec3(2.5, 0.04, 15), PxVec3(1, 0, 2));
+			HL_Image* img = new HL_Image(PxVec3(2.5, 0.04, -10), PxVec3(3, 0, 5.2));
 
 			for (HL_DominoContainer* cont : img->DominoContainersHeld)
 			{

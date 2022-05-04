@@ -46,19 +46,51 @@ namespace HL_PhysicsEngine {
 
 	void HL_Image::AddToScene(Scene* scene)
 	{
-		for (HL_DominoContainer* cont : DominoContainersHeld)
+		for (HL_DominoContainer* cont : this->DominoContainersHeld)
 		{
 			for (HL_Domino* dom : cont->dominoesContained)
 			{
-				dom->Color(PxVec3(0, 0, 0));
-				//dom->Material(scene->_materials->plasticMaterial);
-
 				scene->Add(dom);
 			}
 		}
+
+
 		for (Box* turner : turners)
 		{
 			scene->Add(turner);
+		}
+		ApplyPixels(PixelValues);
+	}
+
+	void HL_Image::ApplyPixels(vector<bool> vals)
+	{
+		int domPerRow = DominoContainersHeld[0]->dominoesContained.size();
+		int domPerPix = domPerRow / sqrt(PixelValues.size());
+		int rowPerPix = (DominoContainersHeld.size()+1) / sqrt(PixelValues.size());
+
+		for (int row = 0; row < DominoContainersHeld.size(); row++)
+		{
+			int currentPixRow = row / rowPerPix;
+			for (int col = 0; col < domPerRow; col++)
+			{
+				int currentPixCol = col / domPerPix;
+
+				int pixIndex = (currentPixRow * sqrt(PixelValues.size()) + currentPixCol);
+
+				//assign the current domino the colour of the pixel it represents
+				HL_Domino* currentDom = DominoContainersHeld[row]->dominoesContained[col];
+				if (vals[pixIndex])
+				{
+					currentDom->Color(PxVec3(0, 0, 0));
+				}
+				else
+				{
+					currentDom->Color(PxVec3(1, 1, 1));
+				}
+
+			}
+
+
 		}
 	}
 
@@ -69,7 +101,7 @@ namespace HL_PhysicsEngine {
 
 		for (int i = 0; i < numRows; i++)
 		{
-			HL_DominoContainer* newCont = new HL_DominoContainer(PxVec3(position.x - dimensions.x, position.y, position.z -dimensions.z + (3 * domDims.x*i)), PxVec3(position.x + dimensions.x, position.y, position.z-dimensions.z + (3 * domDims.x*i)));
+			HL_DominoContainer* newCont = new HL_DominoContainer(PxVec3(position.x - dimensions.x, position.y, position.z -dimensions.z + (3 * domDims.x*i)), PxVec3(position.x + dimensions.x, position.y, position.z-dimensions.z + (3 * domDims.x*i)),domDims);
 
 			DominoContainersHeld.push_back(newCont);
 		}
@@ -86,7 +118,7 @@ namespace HL_PhysicsEngine {
 
 			float zpos = position.z -dimensions.z + ((1.5*domDims.x)+ (3) * domDims.x*((i)));
 
-			Box* turner = new Box(PxTransform(position.x + xpos, position.y + domDims.y, zpos),PxVec3(domDims.z,domDims.y/2, domDims.x*1.8f),2.0f);
+			Box* turner = new Box(PxTransform(position.x + xpos, position.y + domDims.y, zpos),PxVec3(domDims.z/5,domDims.y/5, domDims.x*1.8f),2.0f);
 
 			RevoluteJoint(nullptr, PxTransform(position.x + xpos, position.y + domDims.y, zpos,PxQuat(PxPi/2,PxVec3(0,0,1).getNormalized())), turner, PxTransform(PxIdentity));
 
