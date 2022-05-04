@@ -160,11 +160,15 @@ namespace HL_PhysicsEngine
 			plane->Color(PxVec3(210.f/255.f,210.f/255.f,210.f/255.f));
 			Add(plane);
 
-			cloth = new Cloth(PxTransform(PxVec3(-4.f,9.f,0.f)), PxVec2(8.f,8.f), 40, 40);
+			cloth = new Cloth(PxTransform(PxVec3(-2.f, 8.f, 0.f)), PxVec2(4.f, 8.f), 30, 30, true);
 			cloth->Color(color_palette[2]);
 			Add(cloth);
 
-			box = new Box(PxTransform(PxVec3(0.f,2.f,0.f)),PxVec3(3.f,.7f,.7f),PxReal(0.4f));
+			Cloth* cloth1 = new Cloth(PxTransform(PxVec3(2.f, 8.f, 0.f)), PxVec2(4.f, 8.f), 30, 30, true);
+			cloth1->Color(color_palette[2]);
+			Add(cloth1);
+
+			box = new Box(PxTransform(PxVec3(-6.f,2.f,0.f)),PxVec3(.7f,.7f,.7f),PxReal(0.4f));
 			box->Color(color_palette[3]);
 			Add(box);
 
@@ -173,8 +177,8 @@ namespace HL_PhysicsEngine
 			((PxCloth*)cloth->Get())->setFrictionCoefficient(3.0f);
 
 			((PxCloth*)cloth->Get())->setWindLift(50.0f);
-			((PxCloth*)cloth->Get())->setWindDrag(50.0f);
-			((PxCloth*)cloth->Get())->setWindVelocity(PxVec3(0,0,100.0f));
+			((PxCloth*)cloth->Get())->setWindDrag(.02f);
+			((PxCloth*)cloth->Get())->setWindVelocity(PxVec3(0,0,3.0f));
 
 		}
 

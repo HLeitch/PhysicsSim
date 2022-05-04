@@ -7,6 +7,7 @@
 #include "HL_Events.h"
 #include <string>
 #include "KeyState.h"
+#include "HL_Materials.h"
 
 namespace HL_PhysicsEngine
 {
@@ -159,6 +160,7 @@ namespace HL_PhysicsEngine
 		std::vector<PxActor*> GetAllActors();
 
 		HL_Events* hl_events;
+
 
 	};
 

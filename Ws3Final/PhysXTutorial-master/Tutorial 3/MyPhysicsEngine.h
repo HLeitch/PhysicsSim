@@ -241,6 +241,8 @@ namespace HL_PhysicsEngine
 		Sphere* sphere;
 
 		MySimulationEventCallback* my_callback;
+
+		HL_MaterialsObject* _materials;
 		
 	public:
 		//specify your custom filter shader here
@@ -261,7 +263,7 @@ namespace HL_PhysicsEngine
 		virtual void CustomInit() 
 		{
 			SetVisualisation();
-			HL_MaterialsObject* _materials = new HL_MaterialsObject();
+			this->_materials = new HL_MaterialsObject();
 
 			/*GetMaterial()->setDynamicFriction(.1f);
 			GetMaterial()->setStaticFriction(0.5f);
@@ -289,7 +291,7 @@ namespace HL_PhysicsEngine
 			//don't forget to set your flags for the matching actor as well, e.g.:
 			 //box2->SetupFiltering(FilterGroup::ACTOR1, FilterGroup::ACTOR0);
 			box->Name("Box1");
-			Add(box);
+			//Add(box);
 			//Add(box2);
 
 
@@ -349,10 +351,10 @@ namespace HL_PhysicsEngine
 
 			HL_Domino* domino = new HL_Domino(PxTransform(PxVec3(5, 1, 0)));
 			domino->Color(PxVec3(0, 0, 0));
-			Add(domino);
+			//Add(domino);
 			SphericalJoint* wheelTest = new SphericalJoint(domino, PxTransform(0.f, 0.f, 0.f, PxQuat(revoluteAngle)), sphere, PxTransform(PxVec3(0, 0, 1)));
 			//wheelTest->DriveVelocity(1.2f);
-
+			/*
 			HL_DominoContainer* domcon = new HL_DominoContainer(PxVec3(-0, 0.5, 0), PxVec3(8, 0.5, 0));
 			for (HL_Domino* dom : domcon->dominoesContained)
 			{
@@ -367,7 +369,7 @@ namespace HL_PhysicsEngine
 				dom->Color(PxVec3(0, 0, 0));
 				dom->Material(_materials->plasticMaterial);
 				Add(dom);
-			}
+			}*/
 
 
 
@@ -395,6 +397,18 @@ namespace HL_PhysicsEngine
 			_nTrampoline->top->GetShape()->setMaterials(&_materials->TrampolineMaterial,1);
 			_nTrampoline->AddToScene(this);
 			
+
+			HL_Image* img = new HL_Image(PxVec3(2.5, 0.04, 15), PxVec3(1, 0, 2));
+
+			for (HL_DominoContainer* cont : img->DominoContainersHeld)
+			{
+				for (HL_Domino* dom : cont->dominoesContained)
+				{
+					dom->Material(_materials->plasticMaterial);
+				}
+			}
+			img->AddToScene(this);
+
 /*
 			for (int i = 0; i < 20; i++)
 			{
@@ -409,6 +423,7 @@ namespace HL_PhysicsEngine
 			RevoluteJoint* doorJoint = new RevoluteJoint(nullptr, PxTransform(-1.5, 6.5, 20, PxQuat(PxPi / 2, PxVec3(0.f, 1.f, 0.0f).getNormalized())), door, PxTransform(0, 0, 3));
 			Add(door);
 
+			
 
 			HL_Stairs* stairs = new HL_Stairs(PxVec3(20, 20, 12), PxVec3(13, 0.5, 0));
 			for (StaticBox* stair : stairs->_stairs)

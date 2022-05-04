@@ -20,7 +20,7 @@ namespace HL_PhysicsEngine {
 		//The distance between each domino
 		PxVec3 distanceIncrement = (direction * distance) / numDominos;
 
-		for (int i = 0; i < numDominos; i++)
+		for (int i = 0; i <= numDominos; i++)
 		{
 			//position the domino along a line connecting the start and end points
 			HL_Domino* newDomino = new HL_Domino(PxTransform(start + (distanceIncrement * i)));
@@ -43,5 +43,59 @@ namespace HL_PhysicsEngine {
 		}
 
 	}
+
+	void HL_Image::AddToScene(Scene* scene)
+	{
+		for (HL_DominoContainer* cont : DominoContainersHeld)
+		{
+			for (HL_Domino* dom : cont->dominoesContained)
+			{
+				dom->Color(PxVec3(0, 0, 0));
+				//dom->Material(scene->_materials->plasticMaterial);
+
+				scene->Add(dom);
+			}
+		}
+		for (Box* turner : turners)
+		{
+			scene->Add(turner);
+		}
+	}
+
+	HL_Image::HL_Image(PxVec3 position, PxVec3 dimensions, PxVec3 domDims)
+	{
+		//dominos are twice their dimensions
+		int numRows = 2*dimensions.z / (3*domDims.x);
+
+		for (int i = 0; i < numRows; i++)
+		{
+			HL_DominoContainer* newCont = new HL_DominoContainer(PxVec3(position.x - dimensions.x, position.y, position.z -dimensions.z + (3 * domDims.x*i)), PxVec3(position.x + dimensions.x, position.y, position.z-dimensions.z + (3 * domDims.x*i)));
+
+			DominoContainersHeld.push_back(newCont);
+		}
+
+		//flips after each loop to change the side on which the seesaw is placed
+		bool altSide = false;
+		for (int i = 0; i < numRows - 1; i++)
+		{
+			float xpos = dimensions.x+(domDims.y*3/5);
+			if (altSide)
+			{
+				xpos = -xpos;
+			}
+
+			float zpos = position.z -dimensions.z + ((1.5*domDims.x)+ (3) * domDims.x*((i)));
+
+			Box* turner = new Box(PxTransform(position.x + xpos, position.y + domDims.y, zpos),PxVec3(domDims.z,domDims.y/2, domDims.x*1.8f),2.0f);
+
+			RevoluteJoint(nullptr, PxTransform(position.x + xpos, position.y + domDims.y, zpos,PxQuat(PxPi/2,PxVec3(0,0,1).getNormalized())), turner, PxTransform(PxIdentity));
+
+			turners.push_back(turner);
+
+			altSide = !altSide;
+		}
+
+	}
+
 }
 
