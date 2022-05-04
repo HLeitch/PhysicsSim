@@ -398,7 +398,7 @@ namespace HL_PhysicsEngine
 			_nTrampoline->AddToScene(this);
 			
 
-			HL_Image* img = new HL_Image(PxVec3(2.5, 0.04, -10), PxVec3(3, 0, 5.2));
+			HL_Image* img = new HL_Image(PxVec3(2.5, 0.04, -10), PxVec3(3, 0, 3));
 
 			for (HL_DominoContainer* cont : img->DominoContainersHeld)
 			{

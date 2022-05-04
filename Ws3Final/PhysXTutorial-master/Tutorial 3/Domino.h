@@ -4,7 +4,6 @@
 namespace HL_PhysicsEngine
 {
 
-    static const PxVec3 dominoDimensions = PxVec3(0.2, 0.3, 0.06);
     static const PxReal dominoDensity = PxReal(2.f);
     class HL_Domino :
         public Box

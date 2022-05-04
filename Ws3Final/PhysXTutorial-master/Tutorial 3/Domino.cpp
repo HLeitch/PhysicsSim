@@ -65,8 +65,8 @@ namespace HL_PhysicsEngine {
 	void HL_Image::ApplyPixels(vector<bool> vals)
 	{
 		int domPerRow = DominoContainersHeld[0]->dominoesContained.size();
-		int domPerPix = domPerRow / sqrt(PixelValues.size());
-		int rowPerPix = (DominoContainersHeld.size()+1) / sqrt(PixelValues.size());
+		float domPerPix =(float) domPerRow / sqrt(PixelValues.size());
+		float rowPerPix = (float)(DominoContainersHeld.size() + 1) / sqrt(PixelValues.size());
 
 		for (int row = 0; row < DominoContainersHeld.size(); row++)
 		{
